@@ -1,0 +1,245 @@
+%option noyywrap bison-bridge bison-locations
+
+%{
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <string.h>
+#include <stdint.h>
+
+enum TAGS {
+    TAG_IDENT = 1,
+    TAG_DOTNUMBER,
+    TAG_ESCAPE,
+ 
+};
+
+char *tag_names[] = {
+    "END_OF_PROGRAM", "IDENT", "DOTNUMBER", "ESCAPE",
+    
+};
+
+struct Position {
+    int line, pos, index;
+};
+
+void print_pos(struct Position *p) {
+    printf("(%d,%d)", p->line, p->pos);
+}
+
+struct Fragment {
+    struct Position starting, following;
+};
+
+typedef struct Fragment YYLTYPE;
+
+void print_frag(struct Fragment *f) {
+    print_pos(&(f->starting));
+    printf("-");
+    print_pos(&(f->following));
+}
+
+union Token {
+    size_t charCode;
+    unsigned long ident_num;
+};
+
+typedef union Token YYSTYPE;
+
+int continued;
+struct Position cur;
+struct ErrorList errorList;
+ 
+
+#define YY_USER_ACTION {                \
+    size_t i;                           \
+    if (!continued) {                   \
+        yylloc->starting = cur;         \
+    }                                   \
+    continued = 0;                      \
+                                        \
+    for (i = 0; i < yyleng ; i++) {     \
+        if (yytext[i] == '\n') {        \
+            cur.line++;                 \
+            cur.pos = 1;                \
+        } else {                        \
+            cur.pos++;                  \
+        }                               \
+        cur.index++;                    \
+    }                                   \
+                                        \
+    yylloc->following = cur;            \
+}
+
+struct Error {
+    struct Position pos;
+    char *msg;
+};
+
+struct ErrorList {
+    struct Error *array;
+    size_t length;
+    size_t capacity;
+};
+
+void err(char *msg) {
+    if (errorList.length == errorList.capacity) {
+        errorList.capacity *= 2;
+        errorList.array = (struct Error*)realloc(
+            errorList.array, errorList.capacity * sizeof(struct Error));
+        
+    }
+
+    errorList.length++;
+    errorList.array[errorList.length - 1].pos = cur;
+    errorList.array[errorList.length - 1].msg = msg;
+}
+
+typedef struct{
+    int size;
+    char** names;
+} identTable;
+
+void create_ident_table(identTable * t){
+    t->size = 0;
+    t->names = NULL;
+}
+
+int add_ident(identTable* table, char* name){
+    for (int i = 0; i < table->size; i++){
+        if (strcmp(name, table->names[i]) == 0){
+            return i;
+        }
+    }
+
+    table->size++;
+    if (table->size == 1){
+        table->names = (char**)malloc(sizeof(char*) * (table->size));
+    }
+    else {
+        table->names = (char**)realloc(table->names, sizeof(char*) * (table->size));
+    }
+    table->names[table->size - 1] = (char*)malloc(sizeof(char)*strlen(name));
+    strcpy(table->names[table->size - 1], name);
+    return table->size-1;
+}
+
+identTable table;
+
+void init_scanner() {
+    continued = 0;
+    
+    cur.line = 1;
+    cur.pos = 1;
+    cur.index = 0;
+
+    errorList.array = (struct Error*)malloc(sizeof(struct Error));
+    errorList.length = 0;
+    errorList.capacity = 1;
+    
+    nameDict.array = (struct Name*)malloc(sizeof(struct Name));
+    nameDict.length = 0;
+    nameDict.capacity = 1;
+}
+
+%}
+
+LETTER      [a-zA-Z]
+DIGIT       [0-9]
+DOTDIGIT    {DIGIT}{{1,3}}(?:\.{DIGIT}{{3}})*
+IDENT       (\_| {LETTER})({LETTER}|{DIGIT}|\_)*
+/* ESCAPE      ("\"(?:\\\\.|[^\"\\\\])*\"") */
+
+%%
+
+[\n\t ]+
+ 
+{IDENT}                             { 
+                                        yylval->ident_num = add_ident(&table, yytext);
+                                        return TAG_IDENT;
+                                    }
+
+{DOTDIGIT}                          {
+                                        char* str = yytext; // Сохраняем найденную строку
+                                        char* ptr = str;
+                                        // Удаляем все точки из строки
+                                        char* dest = str;
+                                        while (*ptr) {
+                                            if (*ptr != '.') {
+                                                *dest = *ptr;
+                                                 dest++;
+                                            }
+                                            ptr++;
+                                        }
+                                        *dest = '\0'; // Гарантируем, что строка заканчивается нулевым символом
+                                        yylval = strtol(formatted_num, NULL, 10);
+                                        free(formatted_num);
+                                        return TAG_DOTNUMBER;
+
+                                    }
+                                    
+/* {HEXNUMBER}                         {
+                                        while ( strlen(yytext) >= 17 && *yytext == '0' ) {
+                                            ++yytext;
+                                        }
+                                        if ( strlen(yytext) < 17 )
+                                        {
+                                            yylval->hexnum = strtoull(yytext, NULL, 16);
+                                            return TAG_HEXNUMBER;
+                                        } else {
+                                            err("number length overflow");
+                                            BEGIN(0);
+                                        }
+                                    } */
+
+.                                   err("unexpected character"); BEGIN(0);
+
+%%
+
+int main( int argc, char *argv[] ) {
+    size_t i;
+    int tag;
+    YYSTYPE value;
+    YYLTYPE coords;
+
+    if (argc > 1) {
+        yyin = fopen(argv[1], "r");
+    }
+    init_scanner();
+
+    printf("IDENTS:\n");
+    do {
+        tag = yylex(&value, &coords);
+        printf("\t");
+        print_frag(&coords);
+        printf(" %s", tag_names[tag]);
+        switch (tag) {
+            case TAG_IDENT:
+                printf(" %s", nameDict.array[value.code].str);
+                break;
+            case TAG_DOTNUMBER:
+                printf(" 0x%llX", value.hexnum);
+                break;
+        }
+        printf("\n");
+    } while (tag != 0);
+
+    printf("ERRORS:\n");
+    for (i = 0; i != errorList.length; ++i) {
+        printf("\tError ");
+        print_pos(&errorList.array[i].pos);
+        printf(": %s\n", errorList.array[i].msg);
+    }
+
+    free(errorList.array);
+    for (i = 0; i != nameDict.length; ++i) {
+        free(nameDict.array[i].str);
+    }
+    free(nameDict.array);
+    if (argc > 1) {
+        fclose(yyin);
+    }
+
+    return 0;
+}

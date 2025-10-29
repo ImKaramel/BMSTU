@@ -1,0 +1,64 @@
+digraph {
+    rankdir=LR ;
+    0 [shape=circle]
+    IDENT_1 [shape=doublecircle]
+    IDENT_2 [shape=doublecircle]
+    IDENT_3 [shape=doublecircle]
+    IDENT_4 [shape=doublecircle]
+    IDENT_5 [shape=doublecircle]
+    IDENT_7 [shape=doublecircle]
+    IDENT_8 [shape=doublecircle]
+    IDENT_9 [shape=doublecircle]
+    IDENT_10 [shape=doublecircle]
+
+    KEY_6[shape=doublecircle]
+
+    NUMS_13 [shape=doublecircle]
+    11 [shape=circle]
+    15 [shape=circle]
+    OP_12 [shape=doublecircle]
+    COMMENT_16 [shape=doublecircle]
+    WHITESPACE_14 [shape=doublecircle]
+
+    0 -> IDENT_7[label="letters|numbers"]
+    0 -> IDENT_1[label = "s"]
+    IDENT_1 -> IDENT_2[label = "e"]
+    IDENT_2 -> IDENT_3[label = "l"]
+    IDENT_3 -> IDENT_4[label = "e"]
+    IDENT_4 -> IDENT_5[label = "c"]
+    IDENT_5 -> KEY_6[label = "t"]
+
+    0 -> IDENT_8[label = "f"]
+    IDENT_8 -> IDENT_9[label = "r"]
+    IDENT_9 -> IDENT_10[label = "o"]
+    IDENT_10 -> KEY_6[label = "m"]
+
+    0 -> 15 [label = "["]
+    15 -> 15[label = "any symbol \\{]}"]
+    15 -> COMMENT_16[label = "]"]
+
+
+    0->NUMS_13 [label="numbers"]
+    NUMS_13->NUMS_13 [label="numbers"]
+
+
+    KEY_6->IDENT_7 [label="letters|numbers"]
+    IDENT_10->IDENT_7 [label="letters|numbers"]
+    IDENT_5->IDENT_7 [label="letters|numbers"]
+    IDENT_1->IDENT_7 [label="letters|numbers"]
+    IDENT_2->IDENT_7 [label="letters|numbers"]
+    IDENT_3->IDENT_7 [label="letters|numbers"]
+    IDENT_8->IDENT_7 [label="letters|numbers"]
+    IDENT_9->IDENT_7 [label="letters|numbers"]
+
+    0->11 [label=":"]
+    11->OP_12 [label=")"]
+    11->OP_12 [label="("]
+
+
+    0->WHITESPACE_14 [label="\\n, \\t, _"]
+    WHITESPACE_14->WHITESPACE_14 [label="\\n, \\t, _"]
+
+
+
+}

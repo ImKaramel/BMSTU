@@ -1,0 +1,40 @@
+(<int> [SumVectors (<int> !A)
+    (<int> !B)]
+    )
+    (int #size) := [length !A],
+    (<int> #C) := new_ <int> 777777F{16},
+    !x := !a _eq_ 1,
+    #x := #a _pow_ 2,
+    <!A 5> := <#B 6> * 10,
+    <[Func #x #y] !i+1> := 0,
+    [Factorial #x],
+    (<int> #P) := new_ <int> 10,
+    (<int> #i : 0, #size - 1)
+        <#C #i> := <!A #i> + <!B #i>
+        { <#C 5> := <!A #i> + <!B #i> }
+    %,
+    (?#a _lt_ 0)
+        #sign := -1
+    +++
+        (?#a _eq_ 0)
+            #sign := 0
+        +++
+            #sign :=1
+        %
+    %,
+    ^ #C
+%%
+
+(int [Factorial (int _n)])
+  _n := 1 * _n * [Factorial(_n - 1)],
+  ^ #C
+%%
+
+
+(<int> [Main (<<char>> !args)])
+   (<int> !A),
+   (<int> !B),
+   [SumVectors (!A) (!B)],
+   (int @a) := 'HELLO WORLD',
+    ^ #C
+%%

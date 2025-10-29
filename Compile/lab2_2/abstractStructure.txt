@@ -1,0 +1,59 @@
+Программа на языке L4 представляет собой набор определений функций
+```Program → Func*```
+
+Определение функции состоит из заголовка и тела.
+```Func -> Header Body```
+
+Заголовок функции может быть 2-х типов:
+ 1)возвращающей значение (тип [имя параметры])
+ 2)не возвращающий значения [имя параметры ]
+```Header -> (Type [FuncName FuncArgs]) | [FuncName FuncArgs]```
+
+Список формальных параметров представляет собой последовательность объявлений параметров.
+
+```FuncArgs -> (Type : VarName)+```
+
+Тело функции состоит из последовательности операторов, разделённых запятой и завершается %%
+```FuncBody → (Statement , … , Statement | ε) %%```
+
+```Type → INT | CHAR | BOOL | ARRAY | DOUBLE_ARRAY```
+
+Операторы задают действия, выполняемые программой. Всего предусмотрено восемь видов операторов:
+оператор-объявление (1,2), оператор присваивания(3), оператор вызова функции (4),
+оператор выбора (5,6), два цикла с предусловием (7,8), оператор завершения функции (9)
+и оператор-предупреждение (10).
+
+```Statement -> (Type : VarName)
+            | (Type : VarName) := Expr
+            | Expr := Expr
+            | FuncCallStatement
+            | (? Expr) Statement+ %
+            | (? Expr) Statement+ +++ Statement+ %
+            | (& Expr) Statement+ %
+            | ((Type : VarName) : Expr, Expr, Expr*) Statement+ %
+            | ^ Expr
+            | \ Expr
+            | ε
+```
+
+Выражения в языке формируются из символов операций, констант, имён переменных, параметров и функций,
+изображений типов и круглых скобок.
+
+```Expr -> | Expr BinOp Expr
+           | UnOp Expr
+           | VarName
+           | Const
+           | (Expr)
+           | SpecOp
+           | FUNC_CALL
+
+
+BinOp → + | - | * | / | MOD | POW |  EQ | NE | LT | GT | LE | GE | AND | OR | XOR
+
+Const → INT_CONST | CHAR_CONST | STRING_CONST | TRUE | FALSE | NULL_REF_CONST
+
+UnOp →  NOT | -
+
+SpecOp → ARRAY_ACCESS | NEW
+
+```

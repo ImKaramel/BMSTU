@@ -1,0 +1,60 @@
+Лексическая структура и конкретный синтаксис
+
+Type -> MainType | ArrayType
+ArrayType -> <Type>
+MainType -> char | int | bool
+
+Program -> Funcs
+Funcs -> Funcs Func | ε
+
+Func -> Header Body
+
+FuncHeader -> (Type [FUNCNAME funcArgs]) | [FUNCNAME funcArgs]
+funcArgs -> funcArgs declVar | declVar
+
+declVar -> Type VARNAME
+declVars -> declVar+
+
+Body -> Statements %%
+Statements -> Statement (, Statements)?
+Statement -> declVar
+            | declVar := Expr
+            | Expr := Expr
+            | FuncCallStatement
+            | (? Expr) Statement+ %
+            | (? Expr) Statements +++ Statements %
+            | (? Expr) Statement+ %
+            | LoopStatement %
+            | ^ Expr
+            | \ Expr
+
+FuncCallStatement -> [FUNCNAME Args]
+Args → VARNAME | Args VARNAME
+
+LoopStatement ->  (CycleType VARNAME : Expr, Expr , INT_CONST) | (CycleType VARNAME : Expr, Expr)
+CycleType -> INT_CONST | CHAR_CONST
+
+
+Expr -> LogCompExpr | Expr LogORop Expr
+LogORop -> OR | XOR
+
+LogCompExpr -> LogExpr | LogCompExpr AND LogCompExpr
+LogicalExpr -> LogicalExpr CmpOp LogicalExpr | ArithmExpr
+
+ArithmExpr -> ArithmExpr AddOp ArithmExpr | PowExpr
+AddOp -> + | -
+
+PowExpr -> Term | Term _pow_ PowExpr
+Term -> Unary | Term MulOp Factor
+MulOp → * | / | MOD
+
+Unary -> UnOp UnExpr | UnExpr
+UnOp ->  '-' | NOT
+
+UnExpr -> FuncCallStatement | new_ ArrayType INT_CONST |  Const | VARNAME | ArrayAccess
+ArrayAccess -> <VARNAME INT_CONST> | <ArrayAccess>
+
+CmpOp -> _eq_ | _ne_ | _lt_ | _gt_ | _le_ | _ge_
+Const -> INT_CONST | CHAR_CONST | STRING_CONST | TRUE | FALSE | NULL_REF_CONST
+
+

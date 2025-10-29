@@ -1,0 +1,9 @@
+Whitespace ::= [\n\t\s]+
+AXIOM ::= 'axiom
+EPS ::= 'epsilon
+KEY_OR ::= 'or
+KEY_END ::= 'end
+TERM :: = \"[^\n]*\"
+NTERM ::= [A-Z][a-zA-Z0-9]*
+
+
